@@ -22,30 +22,33 @@ class Node2Vec:
         self.p = p
         self.q = q
 
-    def walk_step(self, t, v):
+    def walk_step(self, last_1th_node, last_2th_node):
         """
-        主要是针对倒数第2个节点v的邻接点群里，采样一个节点并返回。
+        主要是针对倒数第2个节点last_2th_node的邻接点群里，采样一个节点并返回。
         1.特殊情况处理
-            v是本次walk数组里保存的倒数第2个邻接点，
+            last_2th_node是本次walk数组里保存的倒数第2个邻接点，
             如果它周边没有节点了就返回false，让walk数组停止扩充。
 
         2.备选权重修正
-            t是本次walk数组里保存的倒数第1个邻接点，
-            如果v的邻接点是离原始node更远（即t），
+            last_1th_node是本次walk数组里保存的倒数第1个邻接点，
+            如果last_2th_node的邻接点是离原始node更远（即last_1th_node），
             则该邻接点的被选权重调整为 1 / self.p
 
-            如果v的邻接点是离原始node更近（不是t，也与t不邻接），
+            如果last_2th_node的邻接点是离原始node更近（不是last_1th_node，也与last_1th_node不邻接），
             则该邻接点的被选权重调整为 1 / self.q
 
-            如果v的邻接点是与原始node的距离不变，
+            如果last_2th_node的邻接点是与原始node的距离不变，
             则该邻接点的被选权重保持为 1
 
         3. 按权重采样。
         """
-        nbs = list(self.G.neighbors(v))
+
+        nbs = list(self.G.neighbors(last_2th_node))
+        # 1.特殊情况处理
         if len(nbs) == 0:
             return False
 
+        # 2.备选权重修正
         # 所有节点的权重都为1
         weights = [1] * len(nbs)
         for i, x in enumerate(nbs):
@@ -56,12 +59,13 @@ class Node2Vec:
             如果节点不是最后一个节点，且与最后一个节点之间没有连接，
             该节点的权重为1/q
             """
-            if t == x:
+            if last_1th_node == x:
                 weights[i] = 1 / self.p
-            elif not self.G.has_edge(t, x):
+            elif not self.G.has_edge(last_1th_node, x):
                 weights[i] = 1 / self.q
 
-        # 根据更新后的权重，从v节点的邻接节点里抽出一个节点。
+        # 3. 按权重采样。
+        # 根据更新后的权重，从last_2th_node节点的邻接节点里抽出一个节点。
         return random.choices(nbs, weights=weights, k=1)[0]
 
     def random_walk(self):
