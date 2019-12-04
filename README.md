@@ -5,7 +5,7 @@
 
 ## 代码内容
 
-- Node2Vec
+- Node2Vec（在最核心采样方法上做了简化，可能存在问题，建议参考[原版](https://github.com/aditya-grover/node2vec/tree/master/src)）
 - GraphSAGE（有监督方式）
 
 ## 数据文件
